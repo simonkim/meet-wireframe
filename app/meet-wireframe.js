@@ -5,6 +5,7 @@
  * <Mates />
  * <Extra: Unclear>
  */
+const GeoLocTool = require('./geoloctool')
 
 class Zone extends React.Component {
   constructor(props) {
@@ -223,6 +224,11 @@ class WFTop extends React.Component {
 
     // proceed with share
     console.log('TODO: share contact!')
+
+    var tool = new GeoLocTool()
+    tool.getLocation((location) => {
+      console.log(location)
+    })
   }
 }
 
