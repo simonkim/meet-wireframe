@@ -6,6 +6,7 @@
  * <Extra: Unclear>
  */
 const GeoLocTool = require('./geoloctool')
+const GeoLocDistance = require('geolocation-distances')
 
 class Zone extends React.Component {
   constructor(props) {
@@ -225,9 +226,13 @@ class WFTop extends React.Component {
     // proceed with share
     console.log('TODO: share contact!')
 
-    var tool = new GeoLocTool()
-    tool.getLocation((location) => {
-      console.log(location)
+    var geolocTool = new GeoLocTool()
+    geolocTool.getLocation((location) => {
+      console.log('location' + location)
+
+      // 100M
+      var border = GeoLocDistance.getNearLocationsBorder(location.coords, 0.1);
+      console.log('zone range: ' + JSON.stringify(border))      
     })
   }
 }
