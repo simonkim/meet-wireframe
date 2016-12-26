@@ -8,6 +8,7 @@
 const GeoLocTool = require('./geoloctool')
 const GeoLocDistance = require('geolocation-distances')
 const ZoneCodeGen = require('./zonecodegen')
+const AjaxSimple = require('./ajaxsimple')
 
 const Zone = require('./zone')
 const User = require('./user')
@@ -101,20 +102,16 @@ class WFTop extends React.Component {
         row: zoneData
       };  
 
-      $.ajax({
-        url: this.props.urlzoneapi,
-        dataType: 'json',
-        type: 'POST',
-        data: content,
-        success: function(data) {
-          console.log('res: ' + data);
+      var ajax = new AjaxSimple()
+      ajax.post( this.props.urlzoneapi, content, (data, err, status) => {
+        if (data) {
           cb(zoneData)
-        }.bind(this),
-        error: function(xhr, status, err) {
-          console.error(this.props.urlzoneapi, status, err.toString());
-        }.bind(this)
-      });
+        } else {
+          console.error(this.props.urlzoneapi, status, err.toString());          
+        }
+      })
   }
+
 }
 
 ReactDOM.render(
