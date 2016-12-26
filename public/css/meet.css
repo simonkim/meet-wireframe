@@ -1,0 +1,52 @@
+/* meet.css */
+
+header {
+    text-align: center;
+    background: #2C3E50;
+    color: #fff;    
+}
+
+header .container {
+    padding-top: 30px;
+    padding-bottom: 20px
+}
+
+header h1 {
+    border-style: none;
+}
+
+section {
+    padding: 10px 0
+}
+
+section.zone {
+    background: #18BC9C;
+    color: #fff
+}
+
+section.zone legend {
+    color: #eee  
+}
+
+.mt-zone-container {
+  position: relative;
+  padding: 20px 20px 10px;
+  margin: 0 -15px 15px;
+}
+/* Echo out a label for the example */
+.mt-zone-container:after {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #ddd;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  content: "Zone";
+}
+
+.mt-zone-location {
+  color: #EEE;
+  text-transform: uppercase;  
+}

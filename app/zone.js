@@ -12,7 +12,19 @@ const GeoLocDistance = require('geolocation-distances')
 
 function ZoneDisplay(props) {
     return ( 
-      <h2>{props.data.code}</h2>
+        <div>
+          <h2>{props.data.code} </h2> 
+
+          <p className="text-right mt-zone-location"> {props.data.name}</p>
+          <div className="col-md-4 text-center">       
+            <button type="button" className="btn btn-danger" aria-label="Leave">
+              <span className="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+              Leave
+            </button>        
+          </div>
+
+          <img src="images/mock-map.png" />          
+        </div>
     );
 }
 
@@ -36,14 +48,23 @@ class ZoneEntry extends React.Component {
 
   render() {
       return(
-          <div>
-            <form onSubmit={this.handleSubmit}>
-            <label> Zone Code:
-              <input type="text" name="code" onChange={this.handleChange} />
-            </label>
-            <input type="submit" value="Submit" />
-            </form>      
-          </div>  
+        <form className="form-horizontal" role="form" onSubmit={this.handleSubmit}>
+          <legend className="righter">Enter Zone Code</legend>        
+
+          <div className="form-group">          
+            <div className="col-md-4 text-center">               
+              <input type="text" name="code" className="form-control" id="title" placeholder="A B C D" onChange={this.handleChange} />
+            </div>        
+          </div>
+
+          <div className="form-group">
+            <div className="col-md-4 text-center">               
+              <button type="submit" className="btn btn-primary" aria-label="Enter">
+                Enter
+              </button>
+            </div>        
+          </div>          
+        </form>  
       )  
   }
 
@@ -82,14 +103,20 @@ class Zone extends React.Component {
     if (this.props.data) {
       console.log('ZoneDisplay');
       return ( 
-        <ZoneDisplay data={this.props.data}/>
+          <section className="zone">
+            <div className="mt-zone-container">
+              <ZoneDisplay data={this.props.data}/>
+            </div>
+          </section>          
       )
     } else {
       console.log('ZoneEntry');
       return(
-        <div>
-        <ZoneEntry onInput={this.handleZoneCodeInput} />
-        </div>
+          <section className="zone">
+            <div className="mt-zone-container">
+              <ZoneEntry onInput={this.handleZoneCodeInput} />
+            </div>
+          </section>          
       )
     }
   }

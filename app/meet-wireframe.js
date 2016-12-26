@@ -16,7 +16,13 @@ const Mates = require('./mates')
 class WFTop extends React.Component {
 
   /** 
-   * - zoneData: code, location.center, location.border
+   * propts:
+   *  - urlzoneapi: /api/zones
+   *  - urlusersapi: /api/users
+   * 
+   * states:
+   * - mates: []
+   * - zoneData: {code, location.center, location.border}
    */  
   constructor(props) {
     super(props);
