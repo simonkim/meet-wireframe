@@ -12,10 +12,11 @@
     "babel-preset-react": "^6.16.0",
     "body-parser": "^1.4.3",
     "express": "^4.4.5",
-    "geolocation-distances": "^2.0.2",
-    "jasmine": "^2.5.2"
+    "geolocation-distances": "^2.0.2"
   },
   "devDependencies": {
+    "jasmine": "^2.5.2",
+    "react": "^15.4.1",
     "webpack": "^1.14.0"
   },
   "scripts": {
