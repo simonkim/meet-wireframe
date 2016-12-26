@@ -19,6 +19,10 @@ section {
     padding: 10px 0
 }
 
+section legend {
+    border-style: none;
+}
+
 section.zone {
     background: #18BC9C;
     color: #fff
@@ -26,6 +30,27 @@ section.zone {
 
 section.zone legend {
     color: #eee  
+}
+
+section.user {
+    background: #fff;
+    color: #343a40  
+}
+
+section.user.container {
+  position: relative;
+  padding: 20px 20px 10px;
+  margin: 0 -15px 15px;  
+}
+
+section.user.container:after {
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .mt-zone-container {

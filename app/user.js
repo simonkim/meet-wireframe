@@ -47,12 +47,33 @@ class UserContactEdit extends React.Component {
   
   render() {
       return(
-        <form onSubmit={this.handleSubmit}>
-          <div><label>Name:</label> <input onChange={this.handleChangeName} value={this.state.contactName} /> </div>
-          <div><label>Phone:</label> <input onChange={this.handleChangePhone} value={this.state.contactPhone} /> </div>
-          <div><label>Email:</label> <input onChange={this.handleChangeEmail} value={this.state.contactEmail} /> </div>
-          <button>Share</button>
-        </form>
+        <form className="form-horizontal" role="form" onSubmit={this.handleSubmit}>
+            <legend className="righter">Please provide your contact information:</legend>
+            <div className="form-group">
+                <label for="name" className="col-xs-2 control-label">Name</label>
+                <div className="col-xs-4">
+                    <input type="text" className="form-control" id="name" placeholder="..." onChange={this.handleChangeName} value={this.state.contactName}/>
+                </div>
+            </div>
+            <div className="form-group">
+                <label for="phone" className="col-xs-2 control-label">Phone</label>
+                <div className="col-xs-4">
+                    <input type="text" className="form-control" id="phone" placeholder="..." onChange={this.handleChangePhone} value={this.state.contactPhone}/>
+                </div>
+            </div>
+            <div className="form-group">
+                <label for="email" className="col-xs-2 control-label">Email</label>
+                <div className="col-xs-4">
+                    <input type="text" className="form-control" id="email" placeholder="..." onChange={this.handleChangeEmail} value={this.state.contactEmail}/>
+                </div>
+            </div>
+
+            <div className="col-md-4 text-center">               
+              <button type="submit" className="btn btn-primary" aria-label="Share">
+                Share
+              </button>
+            </div>
+          </form>
       )
   }
 
@@ -141,10 +162,20 @@ class User extends React.Component {
   
   render() {
     if (this.props.contactInfo) {
-      return(<UserContactDisplay contactInfo={this.props.contactInfo} onShare={this.props.onShare} />)
+      return(
+        <section className="user">
+          <div className="container">
+            <UserContactDisplay contactInfo={this.props.contactInfo} onShare={this.props.onShare} />
+          </div>
+        </section>
+        )
     } else {
       return(
-        <UserContactEdit onInputComplete={this.handleNewContactInfo.bind(this)} />
+        <section className="user">
+          <div className="container">
+            <UserContactEdit onInputComplete={this.handleNewContactInfo.bind(this)} />
+          </div>
+        </section>
       )
     }
   }
