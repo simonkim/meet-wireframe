@@ -16,14 +16,19 @@ function ZoneDisplay(props) {
           <h2>{props.data.code} </h2> 
 
           <p className="text-right mt-zone-location"> {props.data.name}</p>
-          <div className="col-md-4 text-center">       
+
+          <div className="col-md-12 text-right">       
             <button type="button" className="btn btn-danger" aria-label="Leave">
               <span className="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
               Leave
             </button>        
           </div>
 
-          <img src="images/mock-map.png" />          
+          <div className="col-md-4 text-center">       
+            <img src="images/mock-map.png" />          
+          </div>
+
+
         </div>
     );
 }
