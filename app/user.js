@@ -124,6 +124,7 @@ class UserContactDisplay extends React.Component {
    * props:
    * - contactInfo
    * - onShare(contactInfo)
+   * - onEdit(contactInfo)
    */
   constructor(props) {
     super(props)
@@ -139,14 +140,32 @@ class UserContactDisplay extends React.Component {
        */
       return (
         <div>
-          <p> Welcome, {this.props.contactInfo.name} </p>
-          <button onClick={this.handleClickShare.bind(this)} >Share</button>
+          <legend className="righter">Welcome, <strong>{this.props.contactInfo.name}</strong></legend>
+          <div className="col-md-4">
+            <address>
+              <a href="mailto:#">{this.props.contactInfo.email}</a><br/>
+              <abbr title="Phone">P:</abbr> {this.props.contactInfo.phone}          
+            </address>
+          </div>
+
+          <div className="col-md-4 text-center">               
+            <button type="button" className="btn btn-default" aria-label="Edit" onClick={this.handleClickEdit.bind(this)}>
+              Edit
+            </button>
+            <button type="button" className="btn btn-primary" aria-label="Share" onClick={this.handleClickShare.bind(this)}>
+              Share
+            </button>
+          </div>              
         </div>
       )
   }
 
   handleClickShare(e) {
     this.props.onShare(this.props.contactInfo)
+  }
+
+  handleClickEdit(e) {
+    this.props.onEdit(this.props.contactInfo)
   }
 }
 
@@ -155,17 +174,22 @@ class User extends React.Component {
    * protps:
    * - contactInfo: { name, phone, email, ...}
    * - onShare(contactInfo[, newInput])
+   * - onChange(contactInfo)
    */
   constructor(props) {
     super(props);
+    this.state = {isEditing: false};
   }
   
   render() {
-    if (this.props.contactInfo) {
+    if (this.props.contactInfo && this.state.isEditing === false) {
       return(
         <section className="user">
           <div className="container">
-            <UserContactDisplay contactInfo={this.props.contactInfo} onShare={this.props.onShare} />
+            <UserContactDisplay contactInfo={this.props.contactInfo} 
+              onShare={this.props.onShare} 
+              onEdit={this.onEditRequest.bind(this)}
+            />
           </div>
         </section>
         )
@@ -173,7 +197,9 @@ class User extends React.Component {
       return(
         <section className="user">
           <div className="container">
-            <UserContactEdit onInputComplete={this.handleNewContactInfo.bind(this)} />
+            <UserContactEdit contactInfo={this.props.contactInfo}
+                onInputComplete={this.handleNewContactInfo.bind(this)} 
+            />
           </div>
         </section>
       )
@@ -181,9 +207,19 @@ class User extends React.Component {
   }
 
   handleNewContactInfo(contactInfo) {
-    this.props.onShare(contactInfo, true)
+    if (this.state.isEditing) {
+      // edit complete
+      this.setState( {isEditing: false})
+      this.props.onChange(contactInfo)
+    } else {
+      // share
+      this.props.onShare(contactInfo, true)
+    }
   }
 
+  onEditRequest(contactInfo) {
+    this.setState( {isEditing: true})
+  }
 }
 
 module.exports = User;

@@ -43,24 +43,32 @@ class WFTop extends React.Component {
     
     return (<div>
       <Zone data={this.state.zoneData} onZoneChange={this.onZoneChange.bind(this)} />
-      <User contactInfo={this.state.userContactInfo} onShare={this.onShareContactInfo.bind(this)} />
+      <User contactInfo={this.state.userContactInfo} 
+          onShare={this.onShareContactInfo.bind(this)} 
+          onChange={this.onChangeContactInfo.bind(this)} 
+      />
       <Mates mates={this.state.mates}/>
       </div>
     )
+  }
+
+  onChangeContactInfo(contactInfo) {
+      this.setState( {
+        userContactInfo: contactInfo
+      })
   }
 
   onShareContactInfo(contactInfo, newInput) {
     console.log(contactInfo)
 
     if (newInput === true) {
+      // entered and share immediately
       this.setState( {
         userContactInfo: contactInfo
       })
-      // entered for share
     } // else, clicked Share
 
     // proceed with share
-    console.log('TODO: share contact!')
 
     var geolocTool = new GeoLocTool()
     geolocTool.getLocation((location) => {
