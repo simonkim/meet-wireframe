@@ -147,7 +147,7 @@ class Zone extends React.Component {
 
   queryZonesNearby( coords, cb) {
       // 100M
-      var border = GeoLocDistance.getNearLocationsBorder(location.coords, 0.1);
+      var border = GeoLocDistance.getNearLocationsBorder(coords, 0.1);
 
       // TODO: query over AJAX
       
