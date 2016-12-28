@@ -18,7 +18,7 @@ function ZoneDisplay(props) {
           <p className="text-right mt-zone-location"> {props.data.name}</p>
 
           <div className="col-md-12 text-right">       
-            <button type="button" className="btn btn-danger" aria-label="Leave">
+            <button type="button" className="btn btn-danger" aria-label="Leave"  onClick={props.onLeave}>
               <span className="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
               Leave
             </button>        
@@ -42,6 +42,7 @@ class ZoneEntry extends React.Component {
    * props:
    * - code (optional)
    * - onInput(code)
+   * - onLeave()
    */
   constructor(props) {
     super(props)
@@ -94,7 +95,7 @@ class Zone extends React.Component {
   /**
    * props:
    * - data: code, location.center, location.border
-   * - onZoneChange: Callback when found a zone for the code entered by user
+   * - onZoneChange: Callback when found a zone for the code entered by user, or left(empty object will be passed to callback)
    * - onZoneQuery(coords, callback(zones)):
    */
   constructor(props) {
@@ -106,12 +107,12 @@ class Zone extends React.Component {
 
   render() {
     console.log('Zone render state.data:' + JSON.stringify(this.props.data));
-    if (this.props.data) {
+    if (this.props.data.code) {
       console.log('ZoneDisplay');
       return ( 
           <section className="zone">
             <div className="mt-zone-container">
-              <ZoneDisplay data={this.props.data}/>
+              <ZoneDisplay data={this.props.data} onLeave={this.onLeave.bind(this)} />
             </div>
           </section>          
       )
@@ -150,7 +151,10 @@ class Zone extends React.Component {
       })
     })
   }
-  
+
+  onLeave() {
+      this.props.onZoneChange( {} )    
+  }
 }
 
 module.exports = Zone;

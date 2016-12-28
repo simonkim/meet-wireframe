@@ -28,7 +28,8 @@ class WFTop extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      mates: [{ id: '1', name: 'Lukar'}]
+      mates: [{ id: '1', name: 'Lukar'}],
+      zoneData: {}
     };
 
     this.codegen = new ZoneCodeGen();
