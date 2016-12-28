@@ -9,12 +9,16 @@
  * ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+'use strict';
 
 var fs = require('fs');
 var path = require('path');
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
+
+const LocalTools = require('./libs/localtools');
+const DataStore = require('./libs/datastore');
 
 app.set('port', (process.env.PORT || 3000));
 
@@ -33,49 +37,33 @@ app.use(function(req, res, next) {
     next();
 });
 
+var dataStore = new DataStore(path, fs, path.join(__dirname, 'data'));
+
 // MOCK API
-const apiFiles = {
-  '/api/zones': path.join(__dirname, 'data/zones.json')
+const apiData = {
+  '/api/zones': dataStore.zones,
+  '/api/users': dataStore.users
 }
 
-function setupAPI( apiPath, dataPath) {
+function setupAPI( apiPath, dataRows) {
 
     app.get(apiPath, function(req, res) {
-      fs.readFile(dataPath, function(err, data) {
-        if (err) {
-          console.error(err);
-          process.exit(1);
-        }
-        res.json(JSON.parse(data));
-      });
+        res.json(JSON.parse(dataRows));
     });
 
     app.post(apiPath, function(req, res) {
-      fs.readFile(dataPath, function(err, data) {
-        if (err) {
-          console.error(err);
-          process.exit(1);
-        }
-        var rows = JSON.parse(data);
-        // NOTE: In a real implementation, we would likely rely on a database or
-        // some other approach (e.g. UUIDs) to ensure a globally unique id. We'll
-        // treat Date.now() as unique-enough for our purposes.
         var newRow = req.body.row;
-        rows.push(newRow);
-        fs.writeFile(dataPath, JSON.stringify(rows, null, 4), function(err) {
-          if (err) {
-            console.error(err);
-            process.exit(1);
-          }
-          res.json(rows);
-        });
-      });
-    });
+        dataRows.push(newRow);
+        res.json(dataRows);
 
+        LocalTools.defer( function() {
+          dataStore.synchronize();
+        });
+    });
 }
 
-Object.keys(apiFiles).forEach(function(key) {
-  setupAPI(key, apiFiles[key]);
+Object.keys(apiData).forEach(function(key) {
+  setupAPI(key, apiData[key]);
 });
 
 app.listen(app.get('port'), function() {
