@@ -95,6 +95,7 @@ class Zone extends React.Component {
    * props:
    * - data: code, location.center, location.border
    * - onZoneChange: Callback when found a zone for the code entered by user
+   * - onZoneQuery(coords, callback(zones)):
    */
   constructor(props) {
     super(props);
@@ -137,27 +138,19 @@ class Zone extends React.Component {
 
     var geolocTool = new GeoLocTool()
     geolocTool.getLocation((location) => {
-      this.queryZonesNearby( location.coords, (zones) => {
+      this.props.onZoneQuery( location.coords, (zones) => {
         var matches = zones.filter((zone) => zone.code == code)
         if (matches.length > 0) {
           // found:
           this.props.onZoneChange( matches[0] )
         } else {
           // not found
-          console.log('zone not found');
+          console.log('zone not found for code:' + code);
         }
       })
     })
   }
-
-  queryZonesNearby( coords, cb) {
-      // 100M
-      var border = GeoLocDistance.getNearLocationsBorder(coords, 0.1);
-
-      // TODO: query over AJAX
-      
-      cb([])
-  }
+  
 }
 
 module.exports = Zone;

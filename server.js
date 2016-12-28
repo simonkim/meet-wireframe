@@ -41,50 +41,55 @@ var dataStore = new DataStore(path, fs, path.join(__dirname, 'data'));
 
 // MOCK API
 const apiData = {
-  '/api/zones': dataStore.zones,
-  '/api/users': dataStore.users
+  '/api/zones': {name: 'zones', array: dataStore.zones, customHandler: dataStore.customHandler.bind(dataStore)},
+  '/api/users': {name: 'users', array: dataStore.users, customHandler: dataStore.customHandler.bind(dataStore)}
 }
 
-function setupAPI( apiPath, dataRows) {
+function setupAPI( apiPath, options) {
 
     app.get(apiPath, function(req, res) {
-        res.json(dataRows);
+        res.json(options.array);
     });
 
     app.get(apiPath + '/:id', function(req, res) {
-        var index = dataRows.findIndex((row) => {
+        var index = options.array.findIndex((row) => {
             return (String(row.id) === req.params.id);
         });
         if ( index !== -1) {
-          res.json(dataRows[index]);
+          res.json(options.array[index]);
         } else {
           res.status(404).send({ error: 'Not found' });
         }       
     });    
 
     app.post(apiPath, function(req, res) {
-        var newRow = req.body.row;
-        // NOTE: In a real implementation, we would likely rely on a database or
-        // some other approach (e.g. UUIDs) to ensure a globally unique id. We'll
-        // treat Date.now() as unique-enough for our purposes.
-        newRow.id = Date.now();
 
-        dataRows.push(newRow);
-        res.json(newRow);
+        if ( req.body.row ) {
+          var newRow = req.body.row;
+          // NOTE: In a real implementation, we would likely rely on a database or
+          // some other approach (e.g. UUIDs) to ensure a globally unique id. We'll
+          // treat Date.now() as unique-enough for our purposes.
+          newRow.id = Date.now();
 
-        LocalTools.defer( function() {
-          dataStore.synchronize();
-        });
+          options.array.push(newRow);
+          res.json(newRow);
+
+          LocalTools.defer( function() {
+            dataStore.synchronize();
+          });
+        } else if (options.customHandler) {
+            options.customHandler(options.name, req, res);
+        }
     });
 
     app.put(apiPath, function(req, res) {
 
         var updated = {};
-        var index = dataRows.findIndex((row) => {
+        var index = options.array.findIndex((row) => {
             return (String(row.id) === req.body.row.id);
         });
         if (index !== -1 ) {
-          var row = dataRows[index];
+          var row = options.array[index];
           Object.keys(req.body.row).forEach((key) => {
             row[key] = req.body.row[key];
           });
@@ -101,12 +106,12 @@ function setupAPI( apiPath, dataRows) {
     app.delete(apiPath, function(req, res) {
 
         var deleted = {};
-        var index = dataRows.findIndex((row) => {
+        var index = options.array.findIndex((row) => {
             return (String(row.id) === req.body.row.id);
         });
         if (index !== -1 ) {
-          deleted = dataRows[index];
-          dataRows.splice(index, 1);
+          deleted = options.array[index];
+          options.array.splice(index, 1);
         }
 
         res.json(deleted);

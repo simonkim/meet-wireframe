@@ -34,6 +34,35 @@ class DataStore {
         }
       });
   }
+
+  isCoordsWithinBorder(coords, border) {
+      return (Number(border.latitude.min) <= Number(coords.latitude) && Number(coords.latitude) <= Number(border.latitude.max)) &&
+        (Number(border.longitude.min) <= Number(coords.longitude) && Number(coords.longitude) <= Number(border.longitude.max));
+  }
+  /**
+   * 
+   * cb(data, status, message)
+   */
+  customHandler(name, req, res) {
+      var result = null;
+      var error
+      if (name === "zones") {
+          if ( req.method == "POST" ) {
+              if (req.body.coords) {
+                  // find zone where coords.latitude within border.latitude.min/max, and coords.longitude within border.longitude.min/max
+                  var coords = req.body.coords;
+                  result = this.zones.filter((zone) => {
+                      return this.isCoordsWithinBorder(coords, zone.location.border);
+                  });
+              }
+          }
+      }
+      if (result === null) {
+          res.status(404).send({ error: 'Invalid request parameters'});
+      } else {
+          res.json(result);
+      }
+  }
 }
 
 module.exports = DataStore;

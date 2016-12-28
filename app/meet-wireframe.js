@@ -50,7 +50,10 @@ class WFTop extends React.Component {
     }
     
     return (<div>
-      <Zone data={this.state.zoneData} onZoneChange={this.onZoneChange.bind(this)} />
+      <Zone data={this.state.zoneData} 
+        onZoneChange={this.onZoneChange.bind(this)} 
+        onZoneQuery={this.onZoneQuery.bind(this)}
+      />
       <User contactInfo={this.state.userContactInfo} 
           onShare={this.onShareContactInfo.bind(this)} 
           onChange={this.onChangeContactInfo.bind(this)} 
@@ -119,9 +122,13 @@ class WFTop extends React.Component {
 
       // 100M
       var border = GeoLocDistance.getNearLocationsBorder(location.coords, 0.1);
+      border.latitude.min = Number(border.latitude.min);
+      border.latitude.max = Number(border.latitude.max);
+      border.longitude.min = Number(border.longitude.min);
+      border.longitude.min = Number(border.longitude.min);
       console.log('zone range: ' + JSON.stringify(border))    
 
-      var center = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+      var center = { latitude: Number(location.coords.latitude), longitude: Number(location.coords.longitude) };
       this.requestZoneCreation( {center: center, border: border}, (zoneData, error) => {
         console.log('zoneData: ' + zoneData);
         this.setState( {zoneData: zoneData} )        
@@ -131,6 +138,14 @@ class WFTop extends React.Component {
 
   onZoneChange(zoneData) {
     this.setState( {zoneData: zoneData} )
+  }
+
+  onZoneQuery(coords, cb) {
+    this.ajax.post(this.props.urlzoneapi, 
+      {coords: {latitude: Number(coords.latitude), longitude: Number(coords.longitude)} }, 
+      (data, err, status) => {
+      cb(data || []);
+    });
   }
 
   requestZoneCreation( location, cb ) {
