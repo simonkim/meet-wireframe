@@ -28,10 +28,17 @@ class WFTop extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      mates: [{ id: '1', name: 'Lukar'}],
+      mates: [{ id: '1', name: 'Lukar'}]
     };
 
     this.codegen = new ZoneCodeGen();
+    this.ajax = new AjaxSimple();    
+  }
+
+  componentWillMount() {
+      this.setState( {
+        userId: localStorage.getItem("userId")
+      });
   }
 
   render() {
@@ -53,10 +60,31 @@ class WFTop extends React.Component {
     )
   }
 
+  componentDidMount() {
+    if (this.state.userId) {
+      this.ajax.get(this.props.urlusersapi + '/' + this.state.userId, (contactInfo, err, status) => {
+        if ( contactInfo ) {
+          this.setState( {
+            userContactInfo: contactInfo
+          });
+        } else {
+          console.error( 'Wrong userId? ' + this.state.userId);
+        }
+      });
+    }
+  }
+
   onChangeContactInfo(contactInfo) {
+      contactInfo.id = this.state.userId;
       this.setState( {
         userContactInfo: contactInfo
       })
+
+      this.ajax.put(this.props.urlusersapi, { row: contactInfo }, (contactInfo, err, status) => {
+        if (err) {
+          console.error( 'ERROR PUT ' + this.props.urluserapi + ', error:' +err);
+        }
+      });
   }
 
   onShareContactInfo(contactInfo, newInput) {
@@ -66,7 +94,21 @@ class WFTop extends React.Component {
       // entered and share immediately
       this.setState( {
         userContactInfo: contactInfo
+      });
+
+      this.ajax.post( this.props.urlusersapi, { row: contactInfo }, (data, err, status) => {
+        if (data) {
+          console.log('Users: ' + JSON.stringify(data));
+          localStorage.setItem('userId', data.id);
+          this.setState( {
+            userContactInfo: data,
+            userId: data.id
+          });
+        } else {
+          console.error(this.props.urlusersapi, status, err.toString());          
+        }
       })
+
     } // else, clicked Share
 
     // proceed with share
@@ -102,8 +144,7 @@ class WFTop extends React.Component {
         row: zoneData
       };  
 
-      var ajax = new AjaxSimple()
-      ajax.post( this.props.urlzoneapi, content, (data, err, status) => {
+      this.ajax.post( this.props.urlzoneapi, content, (data, err, status) => {
         if (data) {
           cb(zoneData)
         } else {
@@ -115,6 +156,6 @@ class WFTop extends React.Component {
 }
 
 ReactDOM.render(
-  <WFTop urlzoneapi="/api/zones" />,
+  <WFTop urlzoneapi="/api/zones" urlusersapi="/api/users" />,
   document.getElementById('content')
 );

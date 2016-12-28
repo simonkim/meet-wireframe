@@ -48,17 +48,71 @@ const apiData = {
 function setupAPI( apiPath, dataRows) {
 
     app.get(apiPath, function(req, res) {
-        res.json(JSON.parse(dataRows));
+        res.json(dataRows);
     });
+
+    app.get(apiPath + '/:id', function(req, res) {
+        var index = dataRows.findIndex((row) => {
+            return (String(row.id) === req.params.id);
+        });
+        if ( index !== -1) {
+          res.json(dataRows[index]);
+        } else {
+          res.status(404).send({ error: 'Not found' });
+        }       
+    });    
 
     app.post(apiPath, function(req, res) {
         var newRow = req.body.row;
+        // NOTE: In a real implementation, we would likely rely on a database or
+        // some other approach (e.g. UUIDs) to ensure a globally unique id. We'll
+        // treat Date.now() as unique-enough for our purposes.
+        newRow.id = Date.now();
+
         dataRows.push(newRow);
-        res.json(dataRows);
+        res.json(newRow);
 
         LocalTools.defer( function() {
           dataStore.synchronize();
         });
+    });
+
+    app.put(apiPath, function(req, res) {
+
+        var updated = {};
+        var index = dataRows.findIndex((row) => {
+            return (String(row.id) === req.body.row.id);
+        });
+        if (index !== -1 ) {
+          var row = dataRows[index];
+          Object.keys(req.body.row).forEach((key) => {
+            row[key] = req.body.row[key];
+          });
+
+          updated = row;
+        }
+
+        res.json(updated);
+        LocalTools.defer( function() {
+          dataStore.synchronize();
+        });      
+    });
+
+    app.delete(apiPath, function(req, res) {
+
+        var deleted = {};
+        var index = dataRows.findIndex((row) => {
+            return (String(row.id) === req.body.row.id);
+        });
+        if (index !== -1 ) {
+          deleted = dataRows[index];
+          dataRows.splice(index, 1);
+        }
+
+        res.json(deleted);
+        LocalTools.defer( function() {
+          dataStore.synchronize();
+        });      
     });
 }
 
