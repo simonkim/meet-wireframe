@@ -21,10 +21,10 @@ class GeoLocTool {
     };
     Object.freeze( this.code );
     this.pretendUnsupported = false;
+    this.timeoutms = 3000;
   }
   
   _buildErrorFromGeoLocationError(error) {
-      console.log(error.code);
       var messages = { };
       messages[error.PERMISSION_DENIED] = "User denied the request for Geolocation.";
       messages[error.POSITION_UNAVAILABLE] = "Location information is unavailable.";
@@ -45,7 +45,6 @@ class GeoLocTool {
   }
   
   getLocation(cb) {
-      console.log("this is " + this);
     
       if (navigator.geolocation && !this.pretendUnsupported) {
           navigator.geolocation.getCurrentPosition(
@@ -53,12 +52,11 @@ class GeoLocTool {
               cb(location)
             }, 
             (error) => {
-              console.log(error.code);
-              console.log("this is " + this);
               var err = this._buildErrorFromGeoLocationError(error);
-              console.log(err);
-              cb(null, err);
-                
+              cb(null, err);                
+            },
+            {
+                timeout: this.timeoutms
             }
           );
       } else {
