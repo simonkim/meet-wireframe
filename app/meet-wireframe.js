@@ -13,6 +13,7 @@ const AjaxSimple = require('./ajaxsimple')
 const Zone = require('./zone')
 const User = require('./user')
 const Mates = require('./mates')
+const Alert = require('./alert')
 
 class WFTop extends React.Component {
 
@@ -29,32 +30,31 @@ class WFTop extends React.Component {
     super(props);
     this.state = {
       mates: [{ id: '1', name: 'Lukar'}],
-      zoneData: {}
+      zoneData: {},
+      geolocation: {
+          error: {},
+      },
+      userId: localStorage.getItem("userId")
     };
 
     this.codegen = new ZoneCodeGen();
     this.ajax = new AjaxSimple();    
   }
 
-  componentWillMount() {
-      this.setState( {
-        userId: localStorage.getItem("userId")
-      });
-  }
-
   render() {
-
-    if ( this.state.zoneData ) {
-      console.log('WFTop render state.zoneData:' + JSON.stringify(this.state.zoneData));
-    } else {
-      console.log('WFTop render state.zoneData: is null or undefined');
-    }
-    
+      console.log(this.constructor.name + ': render');
     return (<div>
       <Zone data={this.state.zoneData} 
+        coords={this.state.geolocation.coords}
         onZoneChange={this.onZoneChange.bind(this)} 
         onZoneQuery={this.onZoneQuery.bind(this)}
       />
+
+      <Alert type="danger"
+            visible={!jQuery.isEmptyObject(this.state.geolocation.error)}
+            message={this.state.geolocation.error.message}
+      />
+    
       <User contactInfo={this.state.userContactInfo} 
           onShare={this.onShareContactInfo.bind(this)} 
           onChange={this.onChangeContactInfo.bind(this)} 
@@ -68,6 +68,8 @@ class WFTop extends React.Component {
     if (this.state.userId) {
       this.ajax.get(this.props.urlusersapi + '/' + this.state.userId, (contactInfo, err, status) => {
         if ( contactInfo ) {
+          console.log(this.constructor.name + ': setState(userContactInfo)');
+          
           this.setState( {
             userContactInfo: contactInfo
           });
@@ -76,10 +78,28 @@ class WFTop extends React.Component {
         }
       });
     }
+
+    // Get the location
+    var geolocTool = new GeoLocTool();
+    geolocTool.getLocation((location, error) => {
+        var geolocation = { error: {} }
+        if (error) {
+          geolocation.error = error;
+        }
+
+        if (location) {
+          geolocation.coords = location.coords;
+        }
+        console.log(this.constructor.name + ': setState(geolocation)');
+        this.setState( {
+          geolocation: geolocation
+        })
+    });
   }
 
   onChangeContactInfo(contactInfo) {
       contactInfo.id = this.state.userId;
+      console.log(this.constructor.name + ': setState(userContactInfo)');
       this.setState( {
         userContactInfo: contactInfo
       })
@@ -96,14 +116,15 @@ class WFTop extends React.Component {
 
     if (newInput === true) {
       // entered and share immediately
+      console.log(this.constructor.name + ': setState(userContactInfo)');
       this.setState( {
         userContactInfo: contactInfo
       });
 
       this.ajax.post( this.props.urlusersapi, { row: contactInfo }, (data, err, status) => {
         if (data) {
-          console.log('Users: ' + JSON.stringify(data));
           localStorage.setItem('userId', data.id);
+          console.log(this.constructor.name + ': setState(userContactInfo, userId)');
           this.setState( {
             userContactInfo: data,
             userId: data.id
@@ -117,28 +138,30 @@ class WFTop extends React.Component {
 
     // proceed with share
 
-    var geolocTool = new GeoLocTool()
-    geolocTool.getLocation((location) => {
-      console.log('location' + location)
+    if (this.state.geolocation.coords) {
+      var coords = this.state.geolocation.coords;
 
       // 100M
-      var border = GeoLocDistance.getNearLocationsBorder(location.coords, 0.1);
+      var border = GeoLocDistance.getNearLocationsBorder(coords, 0.1);
       border.latitude.min = Number(border.latitude.min);
       border.latitude.max = Number(border.latitude.max);
       border.longitude.min = Number(border.longitude.min);
       border.longitude.min = Number(border.longitude.min);
       console.log('zone range: ' + JSON.stringify(border))    
 
-      var center = { latitude: Number(location.coords.latitude), longitude: Number(location.coords.longitude) };
+      var center = { latitude: Number(coords.latitude), longitude: Number(coords.longitude) };
       this.requestZoneCreation( {center: center, border: border}, (zoneData, error) => {
-        console.log('zoneData: ' + zoneData);
+        console.log(this.constructor.name + ': setState(zoneData)');
         this.setState( {zoneData: zoneData} )        
       });
-    })
+    } else {
+      // Can't access geolocation. Either not supported or not permitted.
+    }
   }
 
   onZoneChange(zoneData) {
-    this.setState( {zoneData: zoneData} )
+      console.log(this.constructor.name + ': setState(zoneData)');
+      this.setState( {zoneData: zoneData} )
   }
 
   onZoneQuery(coords, cb) {

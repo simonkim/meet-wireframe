@@ -7,8 +7,6 @@
  * </Zone>
  */
 var React = require('react');
-const GeoLocTool = require('./geoloctool')
-const GeoLocDistance = require('geolocation-distances')
 
 function ZoneDisplay(props) {
     return ( 
@@ -95,6 +93,7 @@ class Zone extends React.Component {
   /**
    * props:
    * - data: code, location.center, location.border
+   * - coords: {latitude:, longitude:}
    * - onZoneChange: Callback when found a zone for the code entered by user, or left(empty object will be passed to callback)
    * - onZoneQuery(coords, callback(zones)):
    */
@@ -102,13 +101,10 @@ class Zone extends React.Component {
     super(props);
     this.handleZoneCodeInput = this.handleZoneCodeInput.bind(this);
 
-    console.log('Zone: props.data:' + JSON.stringify(props.data));
   }
 
   render() {
-    console.log('Zone render state.data:' + JSON.stringify(this.props.data));
     if (this.props.data.code) {
-      console.log('ZoneDisplay');
       return ( 
           <section className="zone">
             <div className="mt-zone-container">
@@ -117,7 +113,6 @@ class Zone extends React.Component {
           </section>          
       )
     } else {
-      console.log('ZoneEntry');
       return(
           <section className="zone">
             <div className="mt-zone-container">
@@ -135,21 +130,18 @@ class Zone extends React.Component {
      * 1. found: report back: onZoneChange
      * 2. not found: alert and wait for another code input
      */
-    console.log('input:' + code)
-
-    var geolocTool = new GeoLocTool()
-    geolocTool.getLocation((location) => {
-      this.props.onZoneQuery( location.coords, (zones) => {
-        var matches = zones.filter((zone) => zone.code == code)
-        if (matches.length > 0) {
-          // found:
-          this.props.onZoneChange( matches[0] )
-        } else {
-          // not found
-          console.log('zone not found for code:' + code);
-        }
-      })
-    })
+    if (this.props.coords) {
+        this.props.onZoneQuery( this.props.coords, (zones) => {
+          var matches = zones.filter((zone) => zone.code == code)
+          if (matches.length > 0) {
+            // found:
+            this.props.onZoneChange( matches[0] )
+          } else {
+            // not found
+            console.log('zone not found for code:' + code);
+          }
+        })
+    }
   }
 
   onLeave() {
