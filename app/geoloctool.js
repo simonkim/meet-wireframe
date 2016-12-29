@@ -3,48 +3,120 @@
  * Example
  * ```
  * GeoLocTool = import('./geoloctool.js')
- * GeoLocTool.getLocation((location) {
+ * GeoLocTool.getLocation((location, error) => {
  *  // ...
  * })
  */
-function GeoLocTool() {
+'use strict';
 
-}
+class GeoLocTool {
+  
+  constructor() {
+    this.code = {
+      NOT_SUPPORTED: "NOT_SUPPORTED",
+      
+      messages: {
+        NOT_SUPPORTED: "The browser does not support geolocation detection feature."
+      }
+    };
+    Object.freeze( this.code );
+    this.pretendUnsupported = false;
+  }
+  
+  _buildErrorFromGeoLocationError(error) {
+      console.log(error.code);
+      var messages = { };
+      messages[error.PERMISSION_DENIED] = "User denied the request for Geolocation.";
+      messages[error.POSITION_UNAVAILABLE] = "Location information is unavailable.";
+      messages[error.TIMEOUT] = "The request to get user location timed out.";
+      messages[error.UNKNOWN_ERROR] = "An unknown error occurred.";
+      
+      var message = messages[error.code] || "";
 
-GeoLocTool.prototype.getLocation = function(cb) {
-    if (navigator.geolocation) {
-        console.log('geolocation supported')
-        navigator.geolocation.getCurrentPosition(function(location){
-            console.log('lat' + location.coords.latitude)
-            console.log('lon' + location.coords.longitude)
-            cb(location)
-        }, 
-        function(error){
-            var message = ""
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    message = "User denied the request for Geolocation."
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    message = "Location information is unavailable."
-                    break;
-                case error.TIMEOUT:
-                    message = "The request to get user location timed out."
-                    break;
-                case error.UNKNOWN_ERROR:
-                    message = "An unknown error occurred."
-                    break;
+      var err = Object.assign({}, error, {
+        code: error.code,
+        message: message,
+        PERMISSION_DENIED: error.PERMISSION_DENIED,
+        POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
+        TIMEOUT: error.TIMEOUT,
+        UNKNOWN_ERROR: error.UNKNOWN_ERROR,
+      }); 
+      return err;
+  }
+  
+  getLocation(cb) {
+      console.log("this is " + this);
+    
+      if (navigator.geolocation && !this.pretendUnsupported) {
+          navigator.geolocation.getCurrentPosition(
+            (location) => {
+              cb(location)
+            }, 
+            (error) => {
+              console.log(error.code);
+              console.log("this is " + this);
+              var err = this._buildErrorFromGeoLocationError(error);
+              console.log(err);
+              cb(null, err);
+                
             }
-            console.log(message)
-            // TODO: Report error so the caller can take actions
-        });
-        return
-    } else {
-        console.log('geolocation unsupported')
-        // TODO: define NOT_SUPPORTED constant
-        cb(null, NOT_SUPPORTED)
-    }    
-    console.log('TBD: GeoLocTool.getLocation()')
+          );
+      } else {
+          var error = Object.assign({}, this.code, {
+            code: this.code.NOT_SUPPORTED,
+            message: this.code.messages[this.code.NOT_SUPPORTED]
+          });
+          
+          cb(null, error)
+      }    
+  }  
 }
 
 module.exports = GeoLocTool
+
+/*
+// Test code for error callback
+// Move this to unit test (jasmine, maybe?)
+
+console.log("* const test");
+
+var tool = new GeoLocTool();
+console.log(tool.code);
+
+// This causes TypeError with 'use strict'; which means 'const' is working fine.
+// tool.code.NOT_SUPPORTED = "SUPPORTED";
+// console.log(tool.code);
+ 
+console.log();
+console.log("* NOT_SUPPORTED test");
+tool.pretendUnsupported = true;
+tool.getLocation((location, error) => {
+  if (location) {
+    console.log(location);  
+  } else {
+    if (error.code == error.NOT_SUPPORTED) {
+      console.log("ERROR: " + error.message);
+    } else {
+      console.log("ERROR: code: " + error.code + ', message:' + error.message);
+    }  
+  }
+});
+
+
+console.log();
+console.log("* PERMISSION_DENIED test");
+tool.pretendUnsupported = false;
+tool.getLocation((location, error) => {
+  if (location) {
+    console.log('lat: ' + location.coords.latitude)
+    console.log('lon: ' + location.coords.longitude)
+  } else {
+
+    if (error.code == error.PERMISSION_DENIED) {
+      console.log("PERMISSION_DENIED");
+    } else {
+      console.log("ERROR: code: " + error.code + ', message:' + error.message);
+    }
+  }
+});
+*/
