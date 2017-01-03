@@ -5,6 +5,7 @@
  * <Mates />
  * <Extra: Unclear>
  */
+var React = require('react');
 const GeoLocTool = require('./geoloctool')
 const GeoLocDistance = require('geolocation-distances')
 const ZoneCodeGen = require('./zonecodegen')
@@ -31,10 +32,8 @@ class WFTop extends React.Component {
     this.state = {
       mates: [{ id: '1', name: 'Lukar'}],
       zoneData: {},
-      geolocation: {
-          error: {},
-      },
-      userId: localStorage.getItem("userId")
+      geolocation: { error: {} },
+      userId: localStorage.getItem('userId')
     };
 
     this.codegen = new ZoneCodeGen();
@@ -43,6 +42,7 @@ class WFTop extends React.Component {
 
   render() {
       console.log(this.constructor.name + ': render');
+      
     return (<div>
       <Zone data={this.state.zoneData} 
         coords={this.state.geolocation.coords}
@@ -81,14 +81,25 @@ class WFTop extends React.Component {
 
     // Get the location
     var geolocTool = new GeoLocTool();
+    this.setState( {
+        geolocation: {
+            error: {},
+            waiting: true
+        }
+      });
     geolocTool.getLocation((location, error) => {
-        var geolocation = { error: {} }
+        if (!this.state.geolocation.waiting) {
+            return;
+        }
+        var geolocation = { error: {}, waiting: false }
         if (error) {
           geolocation.error = error;
         }
 
         if (location) {
           geolocation.coords = location.coords;
+          var coords = { latitude: geolocation.coords.latitude, longitude: geolocation.coords.longitude};
+          console.log('location detected: ' + JSON.stringify(coords));
         }
         console.log(this.constructor.name + ': setState(geolocation)');
         this.setState( {
@@ -112,7 +123,13 @@ class WFTop extends React.Component {
   }
 
   onShareContactInfo(contactInfo, newInput) {
-    console.log(contactInfo)
+
+      var coords = this.state.geolocation.coords;
+
+      if (!coords) {
+        // Can't access geolocation. Either not supported or not permitted.
+        return;
+      }
 
     if (newInput === true) {
       // entered and share immediately
@@ -129,40 +146,71 @@ class WFTop extends React.Component {
             userContactInfo: data,
             userId: data.id
           });
+
+            this.createZone(coords, data.id, (zone, error) => {
+              console.log(this.constructor.name + ': setState(zoneData)');
+              this.setState( {zoneData: zone} )        
+            });
+          
         } else {
           console.error(this.props.urlusersapi, status, err.toString());          
         }
       })
 
-    } // else, clicked Share
-
-    // proceed with share
-
-    if (this.state.geolocation.coords) {
-      var coords = this.state.geolocation.coords;
-
-      // 100M
-      var border = GeoLocDistance.getNearLocationsBorder(coords, 0.1);
-      border.latitude.min = Number(border.latitude.min);
-      border.latitude.max = Number(border.latitude.max);
-      border.longitude.min = Number(border.longitude.min);
-      border.longitude.min = Number(border.longitude.min);
-      console.log('zone range: ' + JSON.stringify(border))    
-
-      var center = { latitude: Number(coords.latitude), longitude: Number(coords.longitude) };
-      this.requestZoneCreation( {center: center, border: border}, (zoneData, error) => {
-        console.log(this.constructor.name + ': setState(zoneData)');
-        this.setState( {zoneData: zoneData} )        
-      });
     } else {
-      // Can't access geolocation. Either not supported or not permitted.
+        if (this.state.userContactInfo.id) {
+          this.createZone(coords, this.state.userContactInfo.id, (zone, error) => {
+            console.log(this.constructor.name + ': setState(zoneData)');
+            this.setState( {zoneData: zone} )        
+          });
+        }
     }
   }
 
-  onZoneChange(zoneData) {
-      console.log(this.constructor.name + ': setState(zoneData)');
-      this.setState( {zoneData: zoneData} )
-  }
+    createZone(coords, userid, cb) {
+        // 100M
+        var border = GeoLocDistance.getNearLocationsBorder(coords, 0.1);
+        var center = { latitude: Number(coords.latitude), longitude: Number(coords.longitude) };
+        var zoneData = { 
+            creator: userid, 
+            location: {center: center, border: border},
+            members: [userid]
+        };
+        this.requestZoneCreation( zoneData, cb);
+    }
+
+    onZoneChange(zoneData) {
+        console.log(this.constructor.name + ': setState(zoneData)');
+        var prevZoneCode = this.state.zoneData.code;
+        this.setState( { zoneData: zoneData } )
+        var content = {};
+
+        if ( !jQuery.isEmptyObject(zoneData) ) {
+            // join
+            content = {cmd: 'join', zonecode: zoneData.code, userid: this.state.userId};
+            this.ajax.post(this.props.urlactionapi, content, (data, err, status) => {
+                // array of userContactInfo
+                if (data) {
+                    this.setState( { mates: data });
+                    console.log(data);
+                } else {
+                    console.error(status + ': ' + err.message);
+                }
+            });
+        } else if (prevZoneCode) {
+            // leave
+            this.setState( { mates: [] });
+            
+            content = {cmd: 'leave', zonecode: prevZoneCode, userid: this.state.userId};
+            this.ajax.post(this.props.urlactionapi, content, (data, err, status) => {
+                if (data) {
+                  console.log(data);
+                } else {
+                    console.error(status + ': ' + err.message);
+                }
+            });
+        }
+    }
 
   onZoneQuery(coords, cb) {
     this.ajax.post(this.props.urlzoneapi, 
@@ -172,29 +220,25 @@ class WFTop extends React.Component {
     });
   }
 
-  requestZoneCreation( location, cb ) {
-
-      var zoneData = {
-        code: this.codegen.gen(4).join(''),
-        location: location
-      }
+  requestZoneCreation( zoneData, cb ) {
+      zoneData.code = this.codegen.gen(4).join('');
 
       var content = {
         row: zoneData
       };  
 
       this.ajax.post( this.props.urlzoneapi, content, (data, err, status) => {
-        if (data) {
-          cb(zoneData)
-        } else {
-          console.error(this.props.urlzoneapi, status, err.toString());          
-        }
+          if (data) {
+            cb(zoneData)
+          } else {
+            console.error(this.props.urlzoneapi, status, err.toString());          
+          }
       })
   }
 
 }
 
 ReactDOM.render(
-  <WFTop urlzoneapi="/api/zones" urlusersapi="/api/users" />,
+  <WFTop urlzoneapi="/api/zones" urlusersapi="/api/users" urlactionapi="/api/action" />,
   document.getElementById('content')
 );

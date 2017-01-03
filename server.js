@@ -42,10 +42,28 @@ var dataStore = new DataStore(path, fs, path.join(__dirname, 'data'));
 // MOCK API
 const apiData = {
   '/api/zones': {name: 'zones', array: dataStore.zones, customHandler: dataStore.customHandler.bind(dataStore)},
-  '/api/users': {name: 'users', array: dataStore.users, customHandler: dataStore.customHandler.bind(dataStore)}
+  '/api/users': {name: 'users', array: dataStore.users, customHandler: dataStore.customHandler.bind(dataStore)},
+  '/api/action': {name: 'action', customHandler: dataStore.customHandler.bind(dataStore)}
 }
 
+/**
+ * /api/action POST
+ *  - params:
+ *      cmd=join zonecode, userid   => OK
+ *      cmd=leave zonecode, userid  => OK (destroies zone if creator and all members left)
+ *      cmd=zonemembers zonecode    => [ {user, creator: true}, {user}, ...]
+ * 
+ */
 function setupAPI( apiPath, options) {
+
+    app.all(apiPath, function (req, res, next) {
+      if (!options.array && options.customHandler) {
+          options.customHandler(options.name, req, res);
+          console.log('CUSTOM: ' + apiPath + ', cmd: ' + req.body.cmd);
+      } else {
+        next();
+      }
+    });
 
     app.get(apiPath, function(req, res) {
         res.json(options.array);
