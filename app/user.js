@@ -24,7 +24,7 @@ class UserContactEdit extends React.Component {
       result = { 
           contactName: contactInfo.name,
           contactPhone: contactInfo.phone,
-          contactEmail: contactInfo.email,
+          contactEmail: contactInfo.email
       }
     } else {
       result = { 
@@ -51,7 +51,7 @@ class UserContactEdit extends React.Component {
        * Name:
        * Phone:
        * Email:
-       *                         [Save/Share]
+       *                               [Save]
        * ------------------------------------
        *                              [Login] 
        * ------------------------------------
@@ -80,8 +80,8 @@ class UserContactEdit extends React.Component {
             </div>
 
             <div className="col-md-4 text-center">               
-              <button type="submit" className="btn btn-primary" aria-label="Share">
-                Share
+              <button type="submit" className="btn btn-primary" aria-label="Save">
+                Save
               </button>
             </div>
           </form>
@@ -131,10 +131,10 @@ class UserContactEdit extends React.Component {
 }
 
 class UserContactDisplay extends React.Component {
+
   /**
    * props:
    * - contactInfo
-   * - onShare(contactInfo)
    * - onEdit(contactInfo)
    */
   constructor(props) {
@@ -147,9 +147,9 @@ class UserContactDisplay extends React.Component {
        * ------------------------------------
        * Welcome Sam,
        * (S) Sam One
-       *                  [Edit] [Save/Share]
+       *                    [Not Sam?] [Edit]
        * ------------------------------------
-       *                  [Not Sam?] [Logout] 
+       *                             [Logout] 
        * ------------------------------------
        */
       return (
@@ -166,16 +166,9 @@ class UserContactDisplay extends React.Component {
             <button type="button" className="btn btn-default" aria-label="Edit" onClick={this.handleClickEdit.bind(this)}>
               Edit
             </button>
-            <button type="button" className="btn btn-primary" aria-label="Share" onClick={this.handleClickShare.bind(this)}>
-              Share
-            </button>
           </div>              
         </div>
       )
-  }
-
-  handleClickShare(e) {
-    this.props.onShare(this.props.contactInfo)
   }
 
   handleClickEdit(e) {
@@ -241,7 +234,6 @@ class User extends React.Component {
     /**
      * props:
      * - contactInfo: { name, phone, email, ...}
-     * - onShare(contactInfo[, newInput])
      * - onChange(contactInfo)
      */
   constructor(props) {
@@ -250,12 +242,11 @@ class User extends React.Component {
   }
   
   render() {
-    if ( !jQuery.isEmptyObject(this.props.contactInfo) && this.state.isEditing === false) {
+    if ( this.props.contactInfo.name && this.state.isEditing === false) {
       return(
         <section className="user">
           <div className="container">
             <UserContactDisplay contactInfo={this.props.contactInfo} 
-              onShare={this.props.onShare} 
               onEdit={this.onEditRequest.bind(this)}
             />
             <UserLoginLogout name={this.props.contactInfo.name} infoAvailable={true} authenticated={false} 
@@ -268,7 +259,7 @@ class User extends React.Component {
         <section className="user">
           <div className="container">
             <UserContactEdit contactInfo={this.props.contactInfo}
-                onInputComplete={this.handleNewContactInfo.bind(this)} 
+                onInputComplete={this.handleInputComplete.bind(this)} 
             />
             <UserLoginLogout infoAvailable={false} authenticated={false}/>
           </div>
@@ -277,15 +268,12 @@ class User extends React.Component {
     }
   }
 
-  handleNewContactInfo(contactInfo) {
+  handleInputComplete(contactInfo) {
     if (this.state.isEditing) {
       // edit complete
       this.setState( {isEditing: false})
-      this.props.onChange(contactInfo)
-    } else {
-      // share
-      this.props.onShare(contactInfo, true)
     }
+    this.props.onChange(contactInfo)
   }
 
   onEditRequest(contactInfo) {

@@ -33,6 +33,7 @@ class WFTop extends React.Component {
       mates: [{ id: '1', name: 'Lukar'}],
       zoneData: {},
       geolocation: { error: {} },
+      userContactInfo: {},
       userId: localStorage.getItem('userId')
     };
 
@@ -48,6 +49,7 @@ class WFTop extends React.Component {
         coords={this.state.geolocation.coords}
         onZoneChange={this.onZoneChange.bind(this)} 
         onZoneQuery={this.onZoneQuery.bind(this)}
+        onCreate={this.onZoneCreate.bind(this)}
       />
 
       <Alert type="danger"
@@ -56,7 +58,6 @@ class WFTop extends React.Component {
       />
     
       <User contactInfo={this.state.userContactInfo} 
-          onShare={this.onShareContactInfo.bind(this)} 
           onChange={this.onChangeContactInfo.bind(this)} 
           onReset={this.onResetContactInfo.bind(this)}
       />
@@ -94,7 +95,8 @@ class WFTop extends React.Component {
         }
         var geolocation = { error: {}, waiting: false }
         if (error) {
-          geolocation.error = error;
+            geolocation.error = error;
+            console.error('location detection failed: ' + error.message);
         }
 
         if (location) {
@@ -109,75 +111,59 @@ class WFTop extends React.Component {
     });
   }
 
-  onChangeContactInfo(contactInfo) {
-      contactInfo.id = this.state.userId;
-      console.log(this.constructor.name + ': setState(userContactInfo)');
-      this.setState( {
-        userContactInfo: contactInfo
-      })
+    // - cb(contactInfo, error, status)
+    createEmptyUser(cb) {
+        this.ajax.post( this.props.urlusersapi, { row: { placeholder: true } }, (data, err, status) => {
+            if (data) {
+                localStorage.setItem('userId', data.id);
 
-      this.ajax.put(this.props.urlusersapi, { row: contactInfo }, (contactInfo, err, status) => {
-        if (err) {
-          console.error( 'ERROR PUT ' + this.props.urluserapi + ', error:' +err);
-        }
-      });
-  }
+                console.log(this.constructor.name + ': setState(userContactInfo, userId)');
+                this.setState( {
+                  userContactInfo: data,
+                  userId: data.id
+                });                
+            }
+            cb(data, err, status);
+        });
 
-  /**
-   * The contactInfo is not for the visitor.
-   */   
-  onResetContactInfo() {
-      this.setState( {
-        userContactInfo: {},
-        userId: null
-      });
-      localStorage.removeItem('userId');
-  }
-
-  onShareContactInfo(contactInfo, newInput) {
-
-      var coords = this.state.geolocation.coords;
-
-      if (!coords) {
-        // Can't access geolocation. Either not supported or not permitted.
-        return;
-      }
-
-    if (newInput === true) {
-      // entered and share immediately
-      console.log(this.constructor.name + ': setState(userContactInfo)');
-      this.setState( {
-        userContactInfo: contactInfo
-      });
-
-      this.ajax.post( this.props.urlusersapi, { row: contactInfo }, (data, err, status) => {
-        if (data) {
-          localStorage.setItem('userId', data.id);
-          console.log(this.constructor.name + ': setState(userContactInfo, userId)');
-          this.setState( {
-            userContactInfo: data,
-            userId: data.id
-          });
-
-            this.createZone(coords, data.id, (zone, error) => {
-              console.log(this.constructor.name + ': setState(zoneData)');
-              this.setState( {zoneData: zone} )        
-            });
-          
-        } else {
-          console.error(this.props.urlusersapi, status, err.toString());          
-        }
-      })
-
-    } else {
-        if (this.state.userContactInfo.id) {
-          this.createZone(coords, this.state.userContactInfo.id, (zone, error) => {
-            console.log(this.constructor.name + ': setState(zoneData)');
-            this.setState( {zoneData: zone} )        
-          });
-        }
     }
-  }
+
+    onChangeContactInfo(contactInfo) {
+        if (!this.state.userId) {
+            // We are editing, not creating.
+            console.error('TBD: Make sure user has already been created');
+
+            return;
+        }
+
+        contactInfo.id = this.state.userId;
+        contactInfo.placeholder = false;
+
+        console.log(this.constructor.name + ': setState(userContactInfo)');
+        this.setState( { userContactInfo: contactInfo });
+        this.ajax.put(this.props.urlusersapi, { row: contactInfo }, (contactInfo, err, status) => {
+            if (err) {
+                console.error( 'ERROR PUT ' + this.props.urluserapi + ', status:' + status + ', error:' + err);
+            } else if ( contactInfo ) {
+                this.setState( { userContactInfo: contactInfo });              
+            }
+        });
+    }
+
+    /**
+     * The contactInfo is not for the visitor.
+     */   
+    onResetContactInfo() {
+        this.setState( {
+          userContactInfo: {},
+          userId: null
+        });
+        localStorage.removeItem('userId');
+
+        this.createEmptyUser((contactInfo, err, status) => {
+            console.error('TBD: Handle creating empty user failure. error: ' + err.message);
+        });
+    }
 
     createZone(coords, userid, cb) {
         // 100M
@@ -232,6 +218,41 @@ class WFTop extends React.Component {
     });
   }
 
+    onZoneCreate() {
+        //
+        console.log('create zone');
+
+        var coords = this.state.geolocation.coords;
+        var userid = this.state.userContactInfo.id;
+        
+        if (!coords) {
+          // Can't access geolocation. Either not supported or not permitted.
+          console.error('TBD: Make sure coords are available at this point');
+
+          return;
+        }
+
+        var createZone = (co, uid) => {
+            this.createZone(co, uid, (zone, error) => {
+              console.log(this.constructor.name + ': setState(zoneData)');
+              this.setState( {zoneData: zone} )        
+            });
+        };
+
+        if (!userid) {
+            this.createEmptyUser((contactInfo, err, status) => {
+                if ( contactInfo ) {
+                    createZone(coords, contactInfo.id);
+                } else {
+                    console.error( 'POST:' + this.props.urlusersapi + ', status:' + status + ', error:' + err);                                    
+                }
+            });
+
+        } else {
+            createZone(coords, userid);
+        }
+    }
+
   requestZoneCreation( zoneData, cb ) {
       zoneData.code = this.codegen.gen(4).join('');
 
@@ -241,9 +262,9 @@ class WFTop extends React.Component {
 
       this.ajax.post( this.props.urlzoneapi, content, (data, err, status) => {
           if (data) {
-            cb(zoneData)
+              cb(zoneData)
           } else {
-            console.error(this.props.urlzoneapi, status, err.toString());          
+              console.error( 'POST:' + this.props.urlzoneapi + ', status:' + status + ', error:' + err);
           }
       })
   }

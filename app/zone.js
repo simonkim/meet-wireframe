@@ -40,7 +40,7 @@ class ZoneEntry extends React.Component {
    * props:
    * - code (optional)
    * - onInput(code)
-   * - onLeave()
+   * - onCreate()
    */
   constructor(props) {
     super(props)
@@ -51,7 +51,17 @@ class ZoneEntry extends React.Component {
   }
 
   render() {
-      return(
+
+      /**
+       * ZONE
+       * Enter Code
+       * --------------------------
+       *      [ ] [ ] [ ] [ ]
+       * --------------------------
+       *            [Join] [Create]
+       */
+
+      return (
         <form className="form-horizontal" role="form" onSubmit={this.handleSubmit}>
           <legend className="righter">Enter Zone Code</legend>        
 
@@ -63,9 +73,14 @@ class ZoneEntry extends React.Component {
 
           <div className="form-group">
             <div className="col-md-4 text-center">               
-              <button type="submit" className="btn btn-primary" aria-label="Enter">
-                Enter
+              <button type="submit" className="btn btn-default" aria-label="Enter">
+                Join
               </button>
+
+              <button type="button" className="btn btn-primary" aria-label="Create" onClick={this.props.onCreate}>
+                Create
+              </button>        
+              
             </div>        
           </div>          
         </form>  
@@ -90,17 +105,18 @@ class ZoneEntry extends React.Component {
 }
 
 class Zone extends React.Component {
+
   /**
    * props:
    * - data: code, location.center, location.border
    * - coords: {latitude:, longitude:}
    * - onZoneChange: Callback when found a zone for the code entered by user, or left(empty object will be passed to callback)
    * - onZoneQuery(coords, callback(zones)):
+   * - onCreate():
    */
   constructor(props) {
     super(props);
     this.handleZoneCodeInput = this.handleZoneCodeInput.bind(this);
-
   }
 
   render() {
@@ -116,7 +132,10 @@ class Zone extends React.Component {
       return(
           <section className="zone">
             <div className="mt-zone-container">
-              <ZoneEntry onInput={this.handleZoneCodeInput} />
+              <ZoneEntry 
+                  onInput={this.handleZoneCodeInput} 
+                  onCreate={this.props.onCreate} 
+              />
             </div>
           </section>          
       )
