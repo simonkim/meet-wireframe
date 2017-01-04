@@ -21,7 +21,7 @@ class GeoLocTool {
     };
     Object.freeze( this.code );
     this.pretendUnsupported = false;
-    this.timeoutms = 5000;
+    this.timeoutms = 10000;
   }
   
   _buildErrorFromGeoLocationError(error) {
@@ -55,9 +55,7 @@ class GeoLocTool {
               var err = this._buildErrorFromGeoLocationError(error);
               cb(null, err);                
             },
-            {
-                timeout: this.timeoutms
-            }
+            { timeout: this.timeoutms }
           );
       } else {
           var error = Object.assign({}, this.code, {
