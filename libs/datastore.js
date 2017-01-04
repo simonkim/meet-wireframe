@@ -195,13 +195,17 @@ class DataStore {
                 }
             }
             if (result === null) {
-                res.status(404).send({ error: 'Invalid request parameters'});
+                res.status(400).send({ error: 'Invalid request parameters'});
             } else {
                 res.json(result);
             }      
         } else {
             var fn = this.customHandlers[name];
-            fn(req, res);
+            if (fn) {
+                fn(req, res);
+            } else {
+                res.status(400).send({ error: 'Unknown request: ' + name });
+            }
         }
   }
 }
