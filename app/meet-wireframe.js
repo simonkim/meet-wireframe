@@ -58,6 +58,7 @@ class WFTop extends React.Component {
       <User contactInfo={this.state.userContactInfo} 
           onShare={this.onShareContactInfo.bind(this)} 
           onChange={this.onChangeContactInfo.bind(this)} 
+          onReset={this.onResetContactInfo.bind(this)}
       />
       <Mates mates={this.state.mates}/>
       </div>
@@ -120,6 +121,17 @@ class WFTop extends React.Component {
           console.error( 'ERROR PUT ' + this.props.urluserapi + ', error:' +err);
         }
       });
+  }
+
+  /**
+   * The contactInfo is not for the visitor.
+   */   
+  onResetContactInfo() {
+      this.setState( {
+        userContactInfo: {},
+        userId: null
+      });
+      localStorage.removeItem('userId');
   }
 
   onShareContactInfo(contactInfo, newInput) {

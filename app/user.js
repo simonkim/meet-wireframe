@@ -46,7 +46,18 @@ class UserContactEdit extends React.Component {
   }
   
   render() {
-      return(
+      /*
+       * ------------------------------------
+       * Name:
+       * Phone:
+       * Email:
+       *                         [Save/Share]
+       * ------------------------------------
+       *                              [Login] 
+       * ------------------------------------
+       */
+    
+      return (
         <form className="form-horizontal" role="form" onSubmit={this.handleSubmit}>
             <legend className="righter">Please provide your contact information:</legend>
             <div className="form-group">
@@ -131,12 +142,15 @@ class UserContactDisplay extends React.Component {
   }
 
   render() {
+
       /*
-       * ------------------------
+       * ------------------------------------
        * Welcome Sam,
        * (S) Sam One
-       *                  [Share]
-       * ------------------------
+       *                  [Edit] [Save/Share]
+       * ------------------------------------
+       *                  [Not Sam?] [Logout] 
+       * ------------------------------------
        */
       return (
         <div>
@@ -169,20 +183,74 @@ class UserContactDisplay extends React.Component {
   }
 }
 
+class UserLoginLogout extends React.Component {
+
+    /**
+     * props:
+     * - name: String
+     * - infoAvailable: Bool    [Not you?] button
+     * - authenticated: Bool    [Login/Logout] button
+     * - onReset()
+     * - onLogin(Bool)
+     */
+
+    constructor(props) {
+        super(props);
+
+        var buttonLabel = 'Login';
+        if (props.authenticated) {
+            buttonLabel = 'Logout';
+        }
+        this.state = { authButtonLabel: buttonLabel }
+    }
+
+    render() {
+        if (this.props.infoAvailable) {
+            return (
+              <div className="col-md-4 text-center">               
+                <button type="button" className="btn btn-default" aria-label="Reset" 
+                  onClick={this.props.onReset}>
+                  Not {this.props.name}?
+                </button>
+                <button type="button" className="btn btn-primary" aria-label="{this.state.authButtonLabel}" 
+                  onClick={this.handleLogin.bind(this)}>
+                  {this.state.authButtonLabel}
+                </button>
+              </div>
+            );
+        } else {
+            return (
+              <div className="col-md-4 text-center">               
+                <button type="button" className="btn btn-primary" aria-label="{this.state.authButtonLabel}" 
+                  onClick={this.handleLogin.bind(this)}>
+                  {this.state.authButtonLabel}
+                </button>
+              </div>
+            );
+        }
+    }
+
+    handleLogin() {
+        this.props.onLogin( !this.props.authenticated );
+    }
+
+}
+
 class User extends React.Component {
-  /**
-   * protps:
-   * - contactInfo: { name, phone, email, ...}
-   * - onShare(contactInfo[, newInput])
-   * - onChange(contactInfo)
-   */
+
+    /**
+     * props:
+     * - contactInfo: { name, phone, email, ...}
+     * - onShare(contactInfo[, newInput])
+     * - onChange(contactInfo)
+     */
   constructor(props) {
     super(props);
     this.state = {isEditing: false};
   }
   
   render() {
-    if (this.props.contactInfo && this.state.isEditing === false) {
+    if ( !jQuery.isEmptyObject(this.props.contactInfo) && this.state.isEditing === false) {
       return(
         <section className="user">
           <div className="container">
@@ -190,6 +258,8 @@ class User extends React.Component {
               onShare={this.props.onShare} 
               onEdit={this.onEditRequest.bind(this)}
             />
+            <UserLoginLogout name={this.props.contactInfo.name} infoAvailable={true} authenticated={false} 
+              onReset={this.props.onReset} />
           </div>
         </section>
         )
@@ -200,6 +270,7 @@ class User extends React.Component {
             <UserContactEdit contactInfo={this.props.contactInfo}
                 onInputComplete={this.handleNewContactInfo.bind(this)} 
             />
+            <UserLoginLogout infoAvailable={false} authenticated={false}/>
           </div>
         </section>
       )
@@ -219,6 +290,10 @@ class User extends React.Component {
 
   onEditRequest(contactInfo) {
     this.setState( {isEditing: true})
+  }
+
+  onResetUserInfo() {
+      this.props.onChange({})
   }
 }
 
