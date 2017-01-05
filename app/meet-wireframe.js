@@ -75,8 +75,11 @@ class WFTop extends React.Component {
                 } else {
                     console.error( 'Wrong userId? ' + this.state.userId);
                     localStorage.removeItem('userId');
+                    this.createEmptyUser();
                 }
             });
+        } else {
+            this.createEmptyUser();
         }
 
         // Get the location
@@ -119,7 +122,10 @@ class WFTop extends React.Component {
                   userId: data.id
                 });                
             }
-            cb(data, err, status);
+
+            if (cb) { 
+                cb(data, err, status); 
+            }
         });
 
     }
@@ -173,29 +179,31 @@ class WFTop extends React.Component {
         this.requestZoneCreation( zoneData, cb);
     }
 
+    onZoneJoin(zoneCode, userId) {
+        var content = {cmd: 'join', zonecode: zoneCode, userid: userId};
+        this.ajax.post(this.props.urlactionapi, content, (data, err, status) => {
+            // array of userContactInfo
+            if (data) {
+                this.setState( { mates: data });
+                console.log('Members in zone: ' + zoneCode + ' ' + JSON.stringify(data));
+            } else {
+                console.error(status + ': ' + err.message);
+            }
+        });
+    }
+
     onZoneChange(zoneData) {
         console.log(this.constructor.name + ': setState(zoneData)');
         var prevZoneCode = this.state.zoneData.code;
         this.setState( { zoneData: zoneData } )
-        var content = {};
 
         if ( !jQuery.isEmptyObject(zoneData) ) {
-            // join
-            content = {cmd: 'join', zonecode: zoneData.code, userid: this.state.userId};
-            this.ajax.post(this.props.urlactionapi, content, (data, err, status) => {
-                // array of userContactInfo
-                if (data) {
-                    this.setState( { mates: data });
-                    console.log(data);
-                } else {
-                    console.error(status + ': ' + err.message);
-                }
-            });
+            this.onZoneJoin(zoneData.code, this.state.userId);
         } else if (prevZoneCode) {
             // leave
             this.setState( { mates: [] });
             
-            content = {cmd: 'leave', zonecode: prevZoneCode, userid: this.state.userId};
+            var content = {cmd: 'leave', zonecode: prevZoneCode, userid: this.state.userId};
             this.ajax.post(this.props.urlactionapi, content, (data, err, status) => {
                 if (data) {
                   console.log(data);
