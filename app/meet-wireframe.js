@@ -66,50 +66,45 @@ class WFTop extends React.Component {
     )
   }
 
-  componentDidMount() {
-    if (this.state.userId) {
-      this.ajax.get(this.props.urlusersapi + '/' + this.state.userId, (contactInfo, err, status) => {
-        if ( contactInfo ) {
-          console.log(this.constructor.name + ': setState(userContactInfo)');
-          
-          this.setState( {
-            userContactInfo: contactInfo
-          });
-        } else {
-          console.error( 'Wrong userId? ' + this.state.userId);
-        }
-      });
-    }
-
-    // Get the location
-    var geolocTool = new GeoLocTool();
-    this.setState( {
-        geolocation: {
-            error: {},
-            waiting: true
-        }
-      });
-    geolocTool.getLocation((location, error) => {
-        if (!this.state.geolocation.waiting) {
-            return;
-        }
-        var geolocation = { error: {}, waiting: false }
-        if (error) {
-            geolocation.error = error;
-            console.error('location detection failed: ' + error.message);
+    componentDidMount() {
+        if (this.state.userId) {
+            this.ajax.get(this.props.urlusersapi + '/' + this.state.userId, (contactInfo, err, status) => {
+                if ( contactInfo ) {
+                    console.log(this.constructor.name + ': setState(userContactInfo)');                    
+                    this.setState( { userContactInfo: contactInfo});
+                } else {
+                    console.error( 'Wrong userId? ' + this.state.userId);
+                }
+            });
         }
 
-        if (location) {
-          geolocation.coords = location.coords;
-          var coords = { latitude: geolocation.coords.latitude, longitude: geolocation.coords.longitude};
-          console.log('location detected: ' + JSON.stringify(coords));
-        }
-        console.log(this.constructor.name + ': setState(geolocation)');
+        // Get the location
+        var geolocTool = new GeoLocTool();
         this.setState( {
-          geolocation: geolocation
-        })
-    });
-  }
+            geolocation: {
+                error: {},
+                waiting: true
+            }
+        });
+        geolocTool.getLocation((location, error) => {
+            if (!this.state.geolocation.waiting) {
+                return;
+            }
+            var geolocation = { error: {}, waiting: false }
+            if (error) {
+                geolocation.error = error;
+                console.error('location detection failed: ' + error.message);
+            }
+
+            if (location) {
+                geolocation.coords = location.coords;
+                var coords = { latitude: geolocation.coords.latitude, longitude: geolocation.coords.longitude};
+                console.log('location detected: ' + JSON.stringify(coords));
+            }
+            console.log(this.constructor.name + ': setState(geolocation)');
+            this.setState( { geolocation: geolocation });
+        });
+    }
 
     // - cb(contactInfo, error, status)
     createEmptyUser(cb) {
