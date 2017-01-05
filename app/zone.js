@@ -66,12 +66,15 @@ class ZoneEntry extends React.Component {
           <legend className="righter">Enter Zone Code</legend>        
 
           <div className="form-group">          
+            <div className="col-md-4"></div>
             <div className="col-md-4 text-center">               
               <input type="text" name="code" className="form-control" id="title" placeholder="A B C D" onChange={this.handleChange} />
             </div>        
+            <div className="col-md-4"></div>
           </div>
 
           <div className="form-group">
+            <div className="col-md-4"></div>
             <div className="col-md-4 text-center">               
               <button type="submit" className="btn btn-default" aria-label="Enter">
                 Join
@@ -82,6 +85,7 @@ class ZoneEntry extends React.Component {
               </button>        
               
             </div>        
+            <div className="col-md-4"></div>
           </div>          
         </form>  
       )  
@@ -111,6 +115,7 @@ class Zone extends React.Component {
    * - data: code, location.center, location.border
    * - coords: {latitude:, longitude:}
    * - onZoneChange: Callback when found a zone for the code entered by user, or left(empty object will be passed to callback)
+   *   - TODO: Split into onJoin(code) and onLeave(code)
    * - onZoneQuery(coords, callback(zones)):
    * - onCreate():
    */
@@ -143,7 +148,8 @@ class Zone extends React.Component {
   }
 
   handleZoneCodeInput(code) {
-    /*
+
+    /**
      * current location center, border -> search zones within the border
      *                                 -> filter with code
      * 1. found: report back: onZoneChange
