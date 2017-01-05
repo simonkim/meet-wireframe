@@ -74,6 +74,7 @@ class WFTop extends React.Component {
                     this.setState( { userContactInfo: contactInfo});
                 } else {
                     console.error( 'Wrong userId? ' + this.state.userId);
+                    localStorage.removeItem('userId');
                 }
             });
         }
