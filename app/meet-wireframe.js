@@ -30,7 +30,7 @@ class WFTop extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      mates: [{ id: '1', name: 'Lukar'}],
+      mates: [],
       zoneData: {},
       geolocation: { error: {} },
       userContactInfo: {},
@@ -56,12 +56,12 @@ class WFTop extends React.Component {
             visible={!jQuery.isEmptyObject(this.state.geolocation.error)}
             message={this.state.geolocation.error.message}
       />
-    
+        <Mates mates={this.state.mates}/>
+
       <User contactInfo={this.state.userContactInfo} 
           onChange={this.onChangeContactInfo.bind(this)} 
           onReset={this.onResetContactInfo.bind(this)}
       />
-      <Mates mates={this.state.mates}/>
       </div>
     )
   }

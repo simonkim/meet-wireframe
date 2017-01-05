@@ -3,12 +3,15 @@ var React = require('react');
 
 class Mates extends React.Component {
   render() {
+
+    var mates = this.props.mates.filter((mate) => mate.name);
+
     return (
       <div>
       <p> Mates </p>
       <ul>
-        {this.props.mates.map(mate => (
-          <li key={mate.id}>{mate.name}</li>
+        {mates.map(mate => (
+          <li key={mate.id}>{mate.name} <a href={ "/api/vcard/" + mate.id} ><span className="glyphicon glyphicon-save" aria-hidden="true"></span></a></li>
         ))}
       </ul>
       </div>    

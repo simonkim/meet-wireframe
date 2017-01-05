@@ -43,7 +43,8 @@ var dataStore = new DataStore(path, fs, path.join(__dirname, 'data'));
 const apiData = {
   '/api/zones': {name: 'zones', array: dataStore.zones, customHandler: dataStore.customHandler.bind(dataStore)},
   '/api/users': {name: 'users', array: dataStore.users, customHandler: dataStore.customHandler.bind(dataStore)},
-  '/api/action': {name: 'action', customHandler: dataStore.customHandler.bind(dataStore)}
+  '/api/action': {name: 'action', customHandler: dataStore.customHandler.bind(dataStore)},
+  '/api/vcard/:userId': {name: 'vcard', customHandler: dataStore.customHandler.bind(dataStore)}
 }
 
 /**
@@ -54,6 +55,15 @@ const apiData = {
  *      cmd=zonemembers zonecode    => [ {user, creator: true}, {user}, ...]
  * 
  */
+
+/**
+ * vCard download
+ * /api/vcard/:id
+ * Content-type: text/vcard or text/x-vcard
+ */
+
+
+/** Sets up a route for 'apiPath' */
 function setupAPI( apiPath, options) {
 
     app.all(apiPath, function (req, res, next) {

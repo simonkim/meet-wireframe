@@ -11,7 +11,8 @@ class DataStore {
         this._users = [];
 
         this.customHandlers = {
-            action: this.handleAction.bind(this)
+            action: this.handleAction.bind(this),
+            vcard: this.handleVcard.bind(this)
         };
     }
 
@@ -178,6 +179,52 @@ class DataStore {
             
         }
     }
+
+    vcardString(user) {
+
+        var firstName = "";
+        var lastName = "";
+        var splits = user.name.split(' ');
+        if (splits.length > 0) {
+            firstName = splits[0];
+
+            if (splits.length > 1) {
+                lastName = splits[splits.length -1];
+            }
+        }
+
+        var lines = [
+            'BEGIN:VCARD',
+            'VERSION:3.0',
+            'N:' + lastName + ';' + firstName + ';;;',
+            'FN:' + user.name,
+            'EMAIL;type=INTERNET;type=WORK;type=pref:' + user.email,
+            'TEL;type=CELL;type=VOICE;type=pref:' + user.phone,
+            'END:VCARD'
+        ];
+
+        return lines.join('\n');
+    }
+
+    handleVcard(req, res) {
+        // GET, /api/vcard/:userId
+        if (req.method === 'GET' && req.params.userId) {
+            var user = this.userWithId(req.params.userId);
+            if (user) {
+                var vcardString = this.vcardString(user);
+
+                res.set('Content-Type', 'text/vcard');
+                res.attachment(user.name + '.vcf');    
+                res.send(vcardString);                
+            } else {
+                res.status(400).send({error: 'User not found'});                
+            }
+        } else {
+            res.status(400).send({ error: 'Invalid request parameters'});
+        }
+    }
+
+
     /**
      * 
      * cb(data, status, message)
